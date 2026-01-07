@@ -28,5 +28,10 @@ public class EProiect {
     @Column(name = "absorbtie_financiara_eur")
     private BigDecimal absorbtieFinanciaraEur;
 
-    // Putem adăuga restul câmpurilor (instituție, beneficiar etc.) pe parcurs
+    // FetchType.LAZY este "Best Practice" de senior.
+    // Nu vrem să încărcăm locația automat de fiecare dată când citim un proiect,
+    // decât dacă o cerem explicit (performanță).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_locatie")
+    private ELocatie locatie;
 }
