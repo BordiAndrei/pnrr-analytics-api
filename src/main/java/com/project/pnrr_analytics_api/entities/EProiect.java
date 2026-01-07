@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 @Entity
 @Table(name = "proiecte")
@@ -27,6 +28,21 @@ public class EProiect {
 
     @Column(name = "absorbtie_financiara_eur")
     private BigDecimal absorbtieFinanciaraEur;
+
+    // --- CÂMPURILE LIPSĂ (Ideea 7) ---
+
+    @Column(name = "progres_tehnic")
+    private BigDecimal progresTehnic;
+
+    @Column(name = "progres_financiar")
+    private BigDecimal progresFinanciar;
+
+    // Opțional: coloana calculată (dacă vrei să o mapzi, deși o calculăm și în service)
+    @Column(name = "diferenta_tehnic_financiar")
+    private BigDecimal diferentaTehnicFinanciar;
+
+    @Column(name = "data_actualizare")
+    private LocalDateTime dataActualizare;
 
     // FetchType.LAZY este "Best Practice" de senior.
     // Nu vrem să încărcăm locația automat de fiecare dată când citim un proiect,

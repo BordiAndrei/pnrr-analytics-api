@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -48,5 +49,14 @@ public class AnalyticsController {
     @GetMapping("/funding-structure")
     public ResponseEntity<List<FundingStructureDto>> getFundingStructure() {
         return ResponseEntity.ok(analyticsService.getFundingStructure());
+    }
+
+    @GetMapping("/bottlenecks")
+    public ResponseEntity<List<ProjectBottleneckDTO>> getBottlenecks(
+            @RequestParam(defaultValue = "10") double threshold
+    ) {
+        List<ProjectBottleneckDTO> bottlenecks = analyticsService.getBottleneckProjects(threshold);
+
+        return ResponseEntity.ok(bottlenecks);
     }
 }

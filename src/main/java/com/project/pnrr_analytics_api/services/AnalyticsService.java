@@ -1,6 +1,7 @@
 package com.project.pnrr_analytics_api.services;
 
 import com.project.pnrr_analytics_api.dtos.*;
+import com.project.pnrr_analytics_api.entities.EProiect;
 import com.project.pnrr_analytics_api.repositories.ProiectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -170,5 +173,56 @@ public class AnalyticsService {
                     );
                 })
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProjectBottleneckDTO> getBottleneckProjects(double thresholdVal) {
+        BigDecimal threshold = BigDecimal.valueOf(thresholdVal);
+
+        // Luăm top 50 proiecte cu probleme
+        List<EProiect> projects = proiectRepository.findProjectsWithGap(threshold, PageRequest.of(0, 50));
+
+        return projects.stream()
+                .map(this::mapToBottleneckDTO)
+                .toList(); // Java 16+ feature
+    }
+
+    private ProjectBottleneckDTO mapToBottleneckDTO(EProiect p) {
+        // 1. Gestionare Null Safety pentru Progres (poate veni null din DB)
+        // Dacă e null, considerăm 0
+        BigDecimal tech = p.getProgresTehnic() != null ? p.getProgresTehnic() : BigDecimal.ZERO;
+        BigDecimal fin = p.getProgresFinanciar() != null ? p.getProgresFinanciar() : BigDecimal.ZERO;
+
+        // 2. Calcul Gap
+        BigDecimal gap = tech.subtract(fin);
+
+        // 3. Calcul Suma Blocată: (Valoare * Gap) / 100
+        BigDecimal valoare = p.getValoareEur() != null ? p.getValoareEur() : BigDecimal.ZERO;
+
+        BigDecimal blockedAmount = valoare
+                .multiply(gap)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        // 4. Calcul Zile de la ultima actualizare
+        long daysSince = 0;
+        if (p.getDataActualizare() != null) {
+            daysSince = ChronoUnit.DAYS.between(p.getDataActualizare(), LocalDateTime.now());
+        }
+
+        // 5. Safe Location
+        // Observ în poza ta că relația e definită ca `p.getLocatie()`.
+        String locationName = (p.getLocatie() != null) ? p.getLocatie().getJudet() : "Național/Necunoscut";
+
+        return new ProjectBottleneckDTO(
+                p.getId(),
+                p.getTitlu(),
+                gap,
+                tech,
+                fin,
+                blockedAmount,
+                p.getBeneficiar().getNume(), // Asumând că getBeneficiar() nu e null (schema zice NOT NULL)
+                locationName,
+                daysSince
+        );
     }
 }
