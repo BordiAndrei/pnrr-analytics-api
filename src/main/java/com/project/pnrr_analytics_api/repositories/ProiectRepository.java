@@ -3,10 +3,12 @@ package com.project.pnrr_analytics_api.repositories;
 
 import com.project.pnrr_analytics_api.dtos.FinancialStatsDto;
 import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
+import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
 import com.project.pnrr_analytics_api.entities.EProiect;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -42,4 +44,22 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         ORDER BY SUM(p.valoareEur) DESC
     """)
     List<GeoDistributionDto> getGeoDistribution();
+
+    // --- IDEEA 3: Top Beneficiari ---
+    // Observă parametrul 'Pageable pageable' la final.
+    // Query-ul face JOIN, GROUP BY și ORDER BY suma descrescător.
+    @Query("""
+        SELECT new com.pnrr.dashboard.dto.TopBeneficiaryDto(
+            b.nume,
+            b.cui,
+            b.tip,
+            COALESCE(SUM(p.valoareEur), 0),
+            COUNT(p)
+        )
+        FROM Proiect p
+        JOIN p.beneficiar b
+        GROUP BY b.nume, b.cui, b.tip
+        ORDER BY SUM(p.valoareEur) DESC
+    """)
+    List<TopBeneficiaryDto> getTopBeneficiaries(Pageable pageable);
 }

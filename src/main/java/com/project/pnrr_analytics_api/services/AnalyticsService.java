@@ -3,8 +3,10 @@ package com.project.pnrr_analytics_api.services;
 import com.project.pnrr_analytics_api.dtos.FinancialStatsDto;
 import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
 import com.project.pnrr_analytics_api.dtos.KpiSummaryDto;
+import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
 import com.project.pnrr_analytics_api.repositories.ProiectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,5 +54,13 @@ public class AnalyticsService {
         // Aici am putea adăuga logică extra, de ex: să calculăm procentul din total pentru fiecare județ.
         // Pentru moment, returnăm datele brute agregate.
         return proiectRepository.getGeoDistribution();
+    }
+
+    // Metoda pentru Ideea 3
+    @Transactional(readOnly = true)
+    public List<TopBeneficiaryDto> getTopBeneficiaries() {
+        // Cerem pagina 0, cu dimensiunea 10.
+        // Asta va genera LIMIT 10 în SQL.
+        return proiectRepository.getTopBeneficiaries(PageRequest.of(0, 10));
     }
 }
