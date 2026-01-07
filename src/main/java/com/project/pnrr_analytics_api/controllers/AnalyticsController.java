@@ -1,9 +1,6 @@
 package com.project.pnrr_analytics_api.controllers;
 
-import com.project.pnrr_analytics_api.dtos.CriPerformanceDto;
-import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
-import com.project.pnrr_analytics_api.dtos.KpiSummaryDto;
-import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
+import com.project.pnrr_analytics_api.dtos.*;
 import com.project.pnrr_analytics_api.services.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -41,5 +38,10 @@ public class AnalyticsController {
     @GetMapping("/cri-performance")
     public ResponseEntity<List<CriPerformanceDto>> getCriPerformance() {
         return ResponseEntity.ok(analyticsService.getCriPerformance());
+    }
+
+    @GetMapping("/progress-correlation")
+    public ResponseEntity<List<ProgressCorrelationDto>> getProgressCorrelation() {
+        return ResponseEntity.ok(analyticsService.getProgressCorrelation());
     }
 }

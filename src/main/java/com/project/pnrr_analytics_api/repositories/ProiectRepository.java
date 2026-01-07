@@ -1,10 +1,7 @@
 package com.project.pnrr_analytics_api.repositories;
 
 
-import com.project.pnrr_analytics_api.dtos.CriRawStatsDto;
-import com.project.pnrr_analytics_api.dtos.FinancialStatsDto;
-import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
-import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
+import com.project.pnrr_analytics_api.dtos.*;
 import com.project.pnrr_analytics_api.entities.EProiect;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -79,4 +76,22 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         ORDER BY SUM(p.absorbtieFinanciaraEur) DESC
     """)
     List<CriRawStatsDto> getCriRawStats();
+
+    // --- IDEEA 5: Progres Tehnic vs Financiar ---
+    // Selectăm doar proiectele relevante (cu buget alocat)
+    @Query("""
+        SELECT new com.pnrr.dashboard.dto.ProjectProgressRawDto(
+            p.id,
+            p.titlu,
+            COALESCE(p.progresTehnic, 0),
+            COALESCE(p.progresFinanciar, 0),
+            COALESCE(p.diferentaTehnicFinanciar, 0),
+            p.valoareEur,
+            b.nume
+        )
+        FROM Proiect p
+        JOIN p.beneficiar b
+        WHERE p.valoareEur > 0
+    """)
+    List<ProjectProgressRawDto> getProgressCorrelationRaw();
 }

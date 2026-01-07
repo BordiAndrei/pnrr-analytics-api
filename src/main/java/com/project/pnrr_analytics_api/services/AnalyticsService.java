@@ -102,4 +102,40 @@ public class AnalyticsService {
                 })
                 .toList();
     }
+
+    // Metoda pentru Ideea 5
+    @Transactional(readOnly = true)
+    public List<ProgressCorrelationDto> getProgressCorrelation() {
+        // 1. Luăm datele brute
+        List<ProjectProgressRawDto> rawProjects = proiectRepository.getProgressCorrelationRaw();
+
+        // 2. Calculăm Risk Flag pentru fiecare proiect
+        return rawProjects.stream()
+                .map(p -> {
+                    BigDecimal gap = p.diferentaTehnicFinanciar();
+                    // Gap pozitiv = Tehnic > Financiar (Constructorul a muncit, Statul nu a plătit)
+                    // Gap negativ = Financiar > Tehnic (Avansuri mari)
+
+                    String riskFlag = "LOW";
+                    double gapValue = Math.abs(gap.doubleValue());
+
+                    if (gapValue > 15.0) {
+                        riskFlag = "HIGH";
+                    } else if (gapValue > 5.0) {
+                        riskFlag = "MODERATE";
+                    }
+
+                    return new ProgressCorrelationDto(
+                            p.id(),
+                            p.titlu(),
+                            p.progresTehnic(),
+                            p.progresFinanciar(),
+                            gap,
+                            p.valoareEur(),
+                            p.numeBeneficiar(),
+                            riskFlag
+                    );
+                })
+                .toList();
+    }
 }
