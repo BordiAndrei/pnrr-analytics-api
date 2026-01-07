@@ -12,7 +12,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -264,5 +267,50 @@ public class AnalyticsService {
                     );
                 })
                 .toList();
+    }
+
+    public List<UrbanRuralStatsDTO> getUrbanVsRuralStats() {
+        // 1. Luăm datele brute (Doar Nume Localitate + Valoare)
+        List<LocatieValoareDto> rawData = proiectRepository.findAllProjectLocationsAndValues();
+
+        // 2. Grupăm în memorie folosind un clasificator simplu
+        final Map<String, List<LocatieValoareDto>> groupedByMedium = rawData.stream()
+                .collect(Collectors.groupingBy(dto -> detectMedium(dto.localitateNume())));
+
+        // 3. Procesăm fiecare grup (Urban list, Rural list) și calculăm totalurile
+        List<UrbanRuralStatsDTO> result = new ArrayList<>();
+
+        for (Map.Entry<String, List<LocatieValoareDto>> entry : groupedByMedium.entrySet()) {
+            String mediumType = entry.getKey();
+            List<LocatieValoareDto> items = entry.getValue();
+
+            // Calcule agregare
+            BigDecimal totalVal = items.stream()
+                    .map(LocatieValoareDto::valoareEur)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            long count = items.size();
+
+            BigDecimal avgVal = (count > 0)
+                    ? totalVal.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+
+            result.add(new UrbanRuralStatsDTO(mediumType, totalVal, count, avgVal));
+        }
+
+        return result;
+    }
+
+    // Metoda Helper (Privată) - "Logica de Business" pentru clasificare
+    private String detectMedium(String localitate) {
+        if (localitate == null) return "NECUNOSCUT";
+
+        String lowerLoc = localitate.toLowerCase();
+        // Heuristică simplă bazată pe nomenclatura din România
+        if (lowerLoc.contains("municipiul") || lowerLoc.contains("oras") || lowerLoc.contains("oraș") || lowerLoc.contains("sector")) {
+            return "URBAN";
+        }
+        // Implicit, restul sunt comune/sate
+        return "RURAL";
     }
 }

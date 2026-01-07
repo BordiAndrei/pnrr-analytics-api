@@ -158,6 +158,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     """)
     java.time.LocalDateTime findLastUpdateDate(@Param("id") UUID id);
 
+    // Ideea: 8
     @Query("""
         SELECT new com.project.pnrr_analytics_api.dtos.ComponentRawStatsDto(
             c.cod,
@@ -172,4 +173,16 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         GROUP BY c.cod, c.denumire
     """)
     List<ComponentRawStatsDto> getRawComponentStats();
+
+    // Ideea: 9
+    @Query("""
+        SELECT new com.project.pnrr_analytics_api.dtos.LocatieValoareDto(
+            l.localitate,
+            p.valoareEur
+        )
+        FROM EProiect p
+        JOIN p.locatie l
+        WHERE p.valoareEur > 0
+    """)
+    List<LocatieValoareDto> findAllProjectLocationsAndValues();
 }

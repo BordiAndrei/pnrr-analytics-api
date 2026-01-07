@@ -64,4 +64,9 @@ public class AnalyticsController {
     public ResponseEntity<List<ComponentBreakdownDTO>> getComponentsBreakdown() {
         return ResponseEntity.ok(analyticsService.getComponentsBreakdown());
     }
+
+    @GetMapping("/urban-vs-rural")
+    public ResponseEntity<List<UrbanRuralStatsDTO>> getUrbanVsRural() {
+        return ResponseEntity.ok(analyticsService.getUrbanVsRuralStats());
+    }
 }
