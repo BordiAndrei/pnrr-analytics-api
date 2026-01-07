@@ -12,9 +12,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -312,5 +310,67 @@ public class AnalyticsService {
         }
         // Implicit, restul sunt comune/sate
         return "RURAL";
+    }
+
+    // Mapare statică pentru a converti numele lunii în index (1-12)
+    private static final Map<String, Integer> MONTH_MAP = new HashMap<>();
+    static {
+        MONTH_MAP.put("ianuarie", 1);
+        MONTH_MAP.put("februarie", 2);
+        MONTH_MAP.put("martie", 3);
+        MONTH_MAP.put("aprilie", 4);
+        MONTH_MAP.put("mai", 5);
+        MONTH_MAP.put("iunie", 6);
+        MONTH_MAP.put("iulie", 7);
+        MONTH_MAP.put("august", 8);
+        MONTH_MAP.put("septembrie", 9);
+        MONTH_MAP.put("octombrie", 10);
+        MONTH_MAP.put("noiembrie", 11);
+        MONTH_MAP.put("decembrie", 12);
+    }
+
+    public List<AbsorptionTrendDTO> getAbsorptionTrend() {
+        // 1. Luăm datele brute (nesortate corect cronologic din cauza lunii string)
+        List<MonthlyAbsorptionRawDto> rawData = proiectRepository.getMonthlyAbsorptionStats();
+
+        // 2. Mapăm și Sortăm în Memorie
+        // Transformăm în obiecte care știu indexul lunii pentru a putea sorta
+        List<AbsorptionTrendDTO> sortedList = rawData.stream()
+                .map(raw -> {
+                    String monthLower = raw.monthName().toLowerCase().trim();
+                    Integer monthIndex = MONTH_MAP.getOrDefault(monthLower, 0); // 0 dacă e scris greșit
+                    return new AbsorptionTrendDTO(
+                            raw.year(),
+                            monthIndex,
+                            raw.monthName(), // Păstrăm numele original pentru afișare (ex: "Ianuarie")
+                            raw.totalAbsorbed() != null ? raw.totalAbsorbed() : BigDecimal.ZERO,
+                            BigDecimal.ZERO // Placeholder pentru cumulativ, îl calculăm după sortare
+                    );
+                })
+                // Sortăm: Întâi după An, Apoi după Indexul Lunii
+                .sorted(Comparator.comparingInt(AbsorptionTrendDTO::year)
+                        .thenComparingInt(AbsorptionTrendDTO::monthIndex))
+                .toList(); // Colectăm într-o listă mutabilă (ArrayList)
+
+        // 3. Calculăm Running Total (Suma Cumulativă)
+        // Trebuie să iterăm clasic (for loop) pentru a ține minte suma anterioară
+        List<AbsorptionTrendDTO> finalResult = new ArrayList<>();
+        BigDecimal runningTotal = BigDecimal.ZERO;
+
+        for (AbsorptionTrendDTO item : sortedList) {
+            // Adunăm valoarea curentă la totalul anterior
+            runningTotal = runningTotal.add(item.monthlyAbsorptionEur());
+
+            // Reconstruim DTO-ul cu valoarea cumulativă actualizată
+            finalResult.add(new AbsorptionTrendDTO(
+                    item.year(),
+                    item.monthIndex(),
+                    item.monthName(),
+                    item.monthlyAbsorptionEur(),
+                    runningTotal // Aici punem valoarea calculată
+            ));
+        }
+
+        return finalResult;
     }
 }

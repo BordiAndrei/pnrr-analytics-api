@@ -185,4 +185,17 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         WHERE p.valoareEur > 0
     """)
     List<LocatieValoareDto> findAllProjectLocationsAndValues();
+
+    // Ideea: 10
+    @Query("""
+        SELECT new com.project.pnrr_analytics_api.dtos.MonthlyAbsorptionRawDto(
+            p.anRaportare,
+            p.lunaRaportare,
+            SUM(p.absorbtieFinanciaraEur)
+        )
+        FROM EProiect p
+        WHERE p.anRaportare IS NOT NULL AND p.lunaRaportare IS NOT NULL
+        GROUP BY p.anRaportare, p.lunaRaportare
+    """)
+    List<MonthlyAbsorptionRawDto> getMonthlyAbsorptionStats();
 }

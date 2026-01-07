@@ -69,4 +69,9 @@ public class AnalyticsController {
     public ResponseEntity<List<UrbanRuralStatsDTO>> getUrbanVsRural() {
         return ResponseEntity.ok(analyticsService.getUrbanVsRuralStats());
     }
+
+    @GetMapping("/absorption-trend")
+    public ResponseEntity<List<AbsorptionTrendDTO>> getAbsorptionTrend() {
+        return ResponseEntity.ok(analyticsService.getAbsorptionTrend());
+    }
 }
