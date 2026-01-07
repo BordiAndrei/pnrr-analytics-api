@@ -1,6 +1,7 @@
 package com.project.pnrr_analytics_api.repositories;
 
 
+import com.project.pnrr_analytics_api.dtos.CriRawStatsDto;
 import com.project.pnrr_analytics_api.dtos.FinancialStatsDto;
 import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
 import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
@@ -62,4 +63,20 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         ORDER BY SUM(p.valoareEur) DESC
     """)
     List<TopBeneficiaryDto> getTopBeneficiaries(Pageable pageable);
+
+    // --- IDEEA 4: Performanța CRI ---
+    @Query("""
+        SELECT new com.pnrr.dashboard.dto.CriRawStatsDto(
+            i.cod,
+            i.denumire,
+            COALESCE(SUM(p.valoareEur), 0),
+            COALESCE(SUM(p.absorbtieFinanciaraEur), 0),
+            COUNT(p)
+        )
+        FROM Proiect p
+        JOIN p.institutie i
+        GROUP BY i.cod, i.denumire
+        ORDER BY SUM(p.absorbtieFinanciaraEur) DESC
+    """)
+    List<CriRawStatsDto> getCriRawStats();
 }

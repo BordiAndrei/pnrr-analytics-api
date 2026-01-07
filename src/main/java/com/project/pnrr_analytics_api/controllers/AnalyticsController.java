@@ -1,5 +1,6 @@
 package com.project.pnrr_analytics_api.controllers;
 
+import com.project.pnrr_analytics_api.dtos.CriPerformanceDto;
 import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
 import com.project.pnrr_analytics_api.dtos.KpiSummaryDto;
 import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
@@ -35,5 +36,10 @@ public class AnalyticsController {
     public ResponseEntity<List<TopBeneficiaryDto>> getTopBeneficiaries() {
         var topBeneficiaries = analyticsService.getTopBeneficiaries();
         return ResponseEntity.ok(topBeneficiaries);
+    }
+
+    @GetMapping("/cri-performance")
+    public ResponseEntity<List<CriPerformanceDto>> getCriPerformance() {
+        return ResponseEntity.ok(analyticsService.getCriPerformance());
     }
 }

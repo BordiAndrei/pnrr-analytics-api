@@ -1,9 +1,6 @@
 package com.project.pnrr_analytics_api.services;
 
-import com.project.pnrr_analytics_api.dtos.FinancialStatsDto;
-import com.project.pnrr_analytics_api.dtos.GeoDistributionDto;
-import com.project.pnrr_analytics_api.dtos.KpiSummaryDto;
-import com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto;
+import com.project.pnrr_analytics_api.dtos.*;
 import com.project.pnrr_analytics_api.repositories.ProiectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -62,5 +59,47 @@ public class AnalyticsService {
         // Cerem pagina 0, cu dimensiunea 10.
         // Asta va genera LIMIT 10 în SQL.
         return proiectRepository.getTopBeneficiaries(PageRequest.of(0, 10));
+    }
+
+    // Metoda pentru Ideea 4
+    @Transactional(readOnly = true)
+    public List<CriPerformanceDto> getCriPerformance() {
+        // 1. Luăm datele brute
+        List<CriRawStatsDto> rawStats = proiectRepository.getCriRawStats();
+
+        // 2. Procesăm fiecare rând (Java Stream API)
+        return rawStats.stream()
+                .map(stat -> {
+                    // Calcul procent
+                    double rate = 0.0;
+                    if (stat.totalAlocat().compareTo(BigDecimal.ZERO) > 0) {
+                        rate = stat.totalAbsorbit()
+                                .divide(stat.totalAlocat(), 4, RoundingMode.HALF_UP)
+                                .multiply(BigDecimal.valueOf(100))
+                                .doubleValue();
+                    }
+
+                    // Determinare Status (Logică de Business)
+                    String status;
+                    if (rate >= 20.0) {
+                        status = "AHEAD";
+                    } else if (rate >= 10.0) {
+                        status = "ON_TRACK";
+                    } else {
+                        status = "LAGGING"; // Întârziat
+                    }
+
+                    // Construim DTO-ul final
+                    return new CriPerformanceDto(
+                            stat.cod(),
+                            stat.denumire(),
+                            stat.totalAlocat(),
+                            stat.totalAbsorbit(),
+                            rate,
+                            stat.numarProiecte(),
+                            status
+                    );
+                })
+                .toList();
     }
 }

@@ -39,4 +39,9 @@ public class EProiect {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_beneficiar", nullable = false) // FK definit în DB
     private EBeneficiar beneficiar;
+
+    // --- RELAȚIA NOUĂ (Ideea 4) ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_institutie", nullable = false)
+    private EInstitutie institutie;
 }
