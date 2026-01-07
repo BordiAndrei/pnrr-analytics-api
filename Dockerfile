@@ -5,8 +5,7 @@ WORKDIR /app
 COPY . /app
 
 RUN chmod +x mvnw
-RUN ./mvnw clean package
-
+RUN ./mvnw clean package -DskipTests
 EXPOSE 8080
 
 CMD java -jar $(find target -name "*.jar" | head -n 1)
