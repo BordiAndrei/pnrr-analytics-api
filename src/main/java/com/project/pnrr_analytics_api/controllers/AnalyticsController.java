@@ -59,4 +59,9 @@ public class AnalyticsController {
 
         return ResponseEntity.ok(bottlenecks);
     }
+
+    @GetMapping("/components-breakdown")
+    public ResponseEntity<List<ComponentBreakdownDTO>> getComponentsBreakdown() {
+        return ResponseEntity.ok(analyticsService.getComponentsBreakdown());
+    }
 }

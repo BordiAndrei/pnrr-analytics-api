@@ -60,4 +60,9 @@ public class EProiect {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_institutie", nullable = false)
     private EInstitutie institutie;
+
+    // --- RELAȚIA NOUĂ (Ideea 8) ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_masura", nullable = false)
+    private EMasura masura;
 }

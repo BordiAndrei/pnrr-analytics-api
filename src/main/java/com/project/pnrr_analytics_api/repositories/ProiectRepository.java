@@ -135,7 +135,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     List<ProjectBottleneckDTO> findBottleneckProjects(@Param("threshold") BigDecimal threshold, Pageable pageable);
 
     @Query("""
-        SELECT p 
+        SELECT p
         FROM Proiect p
         JOIN FETCH p.beneficiar
         LEFT JOIN FETCH p.locatie
@@ -157,4 +157,19 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         WHERE p.id = :id
     """)
     java.time.LocalDateTime findLastUpdateDate(@Param("id") UUID id);
+
+    @Query("""
+        SELECT new com.project.pnrr_analytics_api.dtos.ComponentRawStatsDto(
+            c.cod,
+            c.denumire,
+            SUM(p.valoareEur),
+            SUM(p.absorbtieFinanciaraEur),
+            COUNT(p)
+        )
+        FROM EProiect p
+        JOIN p.masura m
+        JOIN m.componenta c
+        GROUP BY c.cod, c.denumire
+    """)
+    List<ComponentRawStatsDto> getRawComponentStats();
 }

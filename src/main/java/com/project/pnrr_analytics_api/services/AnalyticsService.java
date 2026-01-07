@@ -187,6 +187,7 @@ public class AnalyticsService {
                 .toList(); // Java 16+ feature
     }
 
+    @Transactional(readOnly = true)
     private ProjectBottleneckDTO mapToBottleneckDTO(EProiect p) {
         // 1. Gestionare Null Safety pentru Progres (poate veni null din DB)
         // Dacă e null, considerăm 0
@@ -224,5 +225,44 @@ public class AnalyticsService {
                 locationName,
                 daysSince
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ComponentBreakdownDTO> getComponentsBreakdown() {
+        // 1. Obținem datele agregate din DB
+        List<ComponentRawStatsDto> rawStats = proiectRepository.getRawComponentStats();
+
+        // 2. Calculăm Totalul General (Grand Total) pentru a afla procentele
+        // Folosim Stream API pentru a suma toate 'totalValue'
+        BigDecimal grandTotalEur = rawStats.stream()
+                .map(stat -> stat.totalValue() != null ? stat.totalValue() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Evităm împărțirea la zero
+        if (grandTotalEur.compareTo(BigDecimal.ZERO) == 0) {
+            return List.of();
+        }
+
+        // 3. Mapăm către DTO-ul final cu calculul procentual
+        return rawStats.stream()
+                .map(stat -> {
+                    BigDecimal total = stat.totalValue() != null ? stat.totalValue() : BigDecimal.ZERO;
+                    BigDecimal absorbed = stat.absorbedValue() != null ? stat.absorbedValue() : BigDecimal.ZERO;
+
+                    // Calcul procent: (Total Componentă / Grand Total) * 100
+                    BigDecimal percentage = total
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(grandTotalEur, 2, RoundingMode.HALF_UP);
+
+                    return new ComponentBreakdownDTO(
+                            stat.code(),
+                            stat.name(),
+                            total,
+                            absorbed,
+                            stat.count(),
+                            percentage
+                    );
+                })
+                .toList();
     }
 }
