@@ -44,4 +44,9 @@ public class AnalyticsController {
     public ResponseEntity<List<ProgressCorrelationDto>> getProgressCorrelation() {
         return ResponseEntity.ok(analyticsService.getProgressCorrelation());
     }
+
+    @GetMapping("/funding-structure")
+    public ResponseEntity<List<FundingStructureDto>> getFundingStructure() {
+        return ResponseEntity.ok(analyticsService.getFundingStructure());
+    }
 }

@@ -94,4 +94,16 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         WHERE p.valoareEur > 0
     """)
     List<ProjectProgressRawDto> getProgressCorrelationRaw();
+
+    // --- IDEEA 6: Structura Finanțării ---
+    @Query("""
+        SELECT new com.pnrr.dashboard.dto.FundingRawDto(
+            COALESCE(p.sursaFinantare, 'NECUNOSCUT'),
+            COALESCE(SUM(p.valoareEur), 0),
+            COUNT(p)
+        )
+        FROM Proiect p
+        GROUP BY p.sursaFinantare
+    """)
+    List<FundingRawDto> getFundingStructureRaw();
 }

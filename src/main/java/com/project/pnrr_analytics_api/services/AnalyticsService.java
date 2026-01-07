@@ -138,4 +138,37 @@ public class AnalyticsService {
                 })
                 .toList();
     }
+
+    // Metoda pentru Ideea 6
+    @Transactional(readOnly = true)
+    public List<FundingStructureDto> getFundingStructure() {
+        // 1. Luăm datele brute
+        List<FundingRawDto> rawList = proiectRepository.getFundingStructureRaw();
+
+        // 2. Calculăm Totalul General (Grand Total) în memorie
+        BigDecimal grandTotal = rawList.stream()
+                .map(FundingRawDto::totalValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 3. Mapăm la DTO-ul final cu calculul procentual
+        return rawList.stream()
+                .map(item -> {
+                    double share = 0.0;
+                    // Evităm împărțirea la zero
+                    if (grandTotal.compareTo(BigDecimal.ZERO) > 0) {
+                        share = item.totalValue()
+                                .divide(grandTotal, 4, RoundingMode.HALF_UP)
+                                .multiply(BigDecimal.valueOf(100))
+                                .doubleValue();
+                    }
+
+                    return new FundingStructureDto(
+                            item.fundingType(),
+                            item.totalValue(),
+                            share,
+                            item.projectCount()
+                    );
+                })
+                .toList();
+    }
 }
