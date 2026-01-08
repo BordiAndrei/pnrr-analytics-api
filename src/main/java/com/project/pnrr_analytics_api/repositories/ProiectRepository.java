@@ -56,7 +56,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
             COALESCE(SUM(p.valoareEur), 0),
             COUNT(p)
         )
-        FROM Proiect p
+        FROM EProiect p
         JOIN p.beneficiar b
         GROUP BY b.nume, b.cui, b.tip
         ORDER BY SUM(p.valoareEur) DESC
