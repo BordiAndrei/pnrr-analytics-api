@@ -21,12 +21,12 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     // --- IDEEA 1: KPI Summary ---
     // Returnăm FinancialStatsDto (3 câmpuri) pentru că DB-ul nu a calculat încă procentul
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.FinancialStatsDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.FinancialStatsDto(
             COALESCE(SUM(p.valoareEur), 0),
             COALESCE(SUM(p.absorbtieFinanciaraEur), 0),
             COUNT(p)
         )
-        FROM Proiect p
+        FROM EProiect p
     """)
     FinancialStatsDto getGeneralStats();
 
