@@ -44,6 +44,16 @@ public class EProiect {
     @Column(name = "diferenta_tehnic_financiar")
     private BigDecimal diferentaTehnicFinanciar;
 
+    @Column(name = "an_raportare")
+    private Integer anRaportare;
+
+    @Column(name = "luna_raportare")
+    private String lunaRaportare;
+
+    // Opțional, e bine să-l ai mapat și pe acesta pentru viitor
+    @Column(name = "trimestru_raportare")
+    private String trimestruRaportare;
+
     @Column(name = "data_actualizare")
     private LocalDateTime dataActualizare;
 
