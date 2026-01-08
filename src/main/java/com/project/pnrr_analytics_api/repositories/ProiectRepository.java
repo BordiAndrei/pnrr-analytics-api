@@ -21,24 +21,24 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     // --- IDEEA 1: KPI Summary ---
     // Returnăm FinancialStatsDto (3 câmpuri) pentru că DB-ul nu a calculat încă procentul
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.FinancialStatsDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.FinancialStatsDto(
             COALESCE(SUM(p.valoareEur), 0),
             COALESCE(SUM(p.absorbtieFinanciaraEur), 0),
             COUNT(p)
         )
-        FROM Proiect p
+        FROM EProiect p
     """)
     FinancialStatsDto getGeneralStats();
 
     // --- IDEEA 2: Geo Distribution ---
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.GeoDistributionDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.GeoDistributionDto(
             l.judet,
             l.regiune,
             COALESCE(SUM(p.valoareEur), 0),
             COUNT(p)
         )
-        FROM Proiect p
+        FROM EProiect p
         JOIN p.locatie l
         GROUP BY l.judet, l.regiune
         ORDER BY SUM(p.valoareEur) DESC
@@ -49,7 +49,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     // Observă parametrul 'Pageable pageable' la final.
     // Query-ul face JOIN, GROUP BY și ORDER BY suma descrescător.
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.TopBeneficiaryDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.TopBeneficiaryDto(
             b.nume,
             b.cui,
             b.tip,
@@ -65,14 +65,14 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
 
     // --- IDEEA 4: Performanța CRI ---
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.CriRawStatsDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.CriRawStatsDto(
             i.cod,
             i.denumire,
             COALESCE(SUM(p.valoareEur), 0),
             COALESCE(SUM(p.absorbtieFinanciaraEur), 0),
             COUNT(p)
         )
-        FROM Proiect p
+        FROM EProiect p
         JOIN p.institutie i
         GROUP BY i.cod, i.denumire
         ORDER BY SUM(p.absorbtieFinanciaraEur) DESC
@@ -82,7 +82,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     // --- IDEEA 5: Progres Tehnic vs Financiar ---
     // Selectăm doar proiectele relevante (cu buget alocat)
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.ProjectProgressRawDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.ProjectProgressRawDto(
             p.id,
             p.titlu,
             COALESCE(p.progresTehnic, 0),
@@ -91,7 +91,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
             p.valoareEur,
             b.nume
         )
-        FROM Proiect p
+        FROM EProiect p
         JOIN p.beneficiar b
         WHERE p.valoareEur > 0
     """)
@@ -99,12 +99,12 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
 
     // --- IDEEA 6: Structura Finanțării ---
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.FundingRawDto(
+        SELECT new com.project.pnrr_analytics_api.dtos.FundingRawDto(
             COALESCE(p.sursaFinantare, 'NECUNOSCUT'),
             COALESCE(SUM(p.valoareEur), 0),
             COUNT(p)
         )
-        FROM Proiect p
+        FROM EProiect p
         GROUP BY p.sursaFinantare
     """)
     List<FundingRawDto> getFundingStructureRaw();
@@ -114,7 +114,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
      * depășește un anumit prag (threshold).
      */
     @Query("""
-        SELECT new com.pnrr.dashboard.dto.ProjectBottleneckDTO(
+        SELECT new com.project.pnrr_analytics_api.dtos.ProjectBottleneckDTO(
             p.id,
             p.titlu,
             (p.progresTehnic - p.progresFinanciar),
@@ -125,7 +125,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
             l.judet,
             0L -- Vom calcula zilele în Service, aici punem placeholder sau folosim logică SQL complexă
         )
-        FROM Proiect p
+        FROM EProiect p
         JOIN p.beneficiar b
         LEFT JOIN p.locatie l
         WHERE (p.progresTehnic - p.progresFinanciar) > :threshold
@@ -136,7 +136,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
 
     @Query("""
         SELECT p
-        FROM Proiect p
+        FROM EProiect p
         JOIN FETCH p.beneficiar
         LEFT JOIN FETCH p.locatie
         WHERE (p.progresTehnic - p.progresFinanciar) > :threshold
@@ -144,19 +144,6 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
         ORDER BY (p.progresTehnic - p.progresFinanciar) DESC
     """)
     List<EProiect> findProjectsWithGap(@Param("threshold") BigDecimal threshold, Pageable pageable);
-
-    // Notă: Pentru a calcula corect 'daysSinceLastUpdate' direct în query JPQL,
-    // ar depinde de dialectul bazei de date. E mai sigur să aducem entitatea
-    // și să calculăm în Java, DAR pentru performanță (să nu aducem tot obiectul),
-    // o să facem un mic compromis: aducem data actualizării și o mapam,
-    // apoi procesăm lista în Service.
-    // *Pentru simplitate acum, lăsăm 0L și îl populăm în Service.*
-    @Query("""
-        SELECT p.dataActualizare
-        FROM Proiect p
-        WHERE p.id = :id
-    """)
-    java.time.LocalDateTime findLastUpdateDate(@Param("id") UUID id);
 
     // Ideea: 8
     @Query("""
