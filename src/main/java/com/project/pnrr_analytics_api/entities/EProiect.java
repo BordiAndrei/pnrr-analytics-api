@@ -23,6 +23,9 @@ public class EProiect {
     // Mapăm doar câmpurile necesare pentru KPI-uri acum,
     // dar entity-ul ar trebui să le aibă pe toate conform DB.
 
+    @Column(name = "sursa_finantare")
+    private String sursaFinantare;
+
     @Column(name = "valoare_eur")
     private BigDecimal valoareEur;
 
