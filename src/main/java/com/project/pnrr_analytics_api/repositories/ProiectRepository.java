@@ -109,31 +109,7 @@ public interface ProiectRepository extends JpaRepository<EProiect, UUID> {
     """)
     List<FundingRawDto> getFundingStructureRaw();
 
-    /**
-     * Selectează proiectele unde diferența dintre progresul tehnic și cel financiar
-     * depășește un anumit prag (threshold).
-     */
-    @Query("""
-        SELECT new com.project.pnrr_analytics_api.dtos.ProjectBottleneckDTO(
-            p.id,
-            p.titlu,
-            (p.progresTehnic - p.progresFinanciar),
-            p.progresTehnic,
-            p.progresFinanciar,
-            (p.valoareEur * (p.progresTehnic - p.progresFinanciar) / 100),
-            b.nume,
-            l.judet,
-            0L -- Vom calcula zilele în Service, aici punem placeholder sau folosim logică SQL complexă
-        )
-        FROM EProiect p
-        JOIN p.beneficiar b
-        LEFT JOIN p.locatie l
-        WHERE (p.progresTehnic - p.progresFinanciar) > :threshold
-        AND p.valoareEur > 0
-        ORDER BY (p.progresTehnic - p.progresFinanciar) DESC
-    """)
-    List<ProjectBottleneckDTO> findBottleneckProjects(@Param("threshold") BigDecimal threshold, Pageable pageable);
-
+    // --- IDEEA 7: Proiecte cu blocaje ---
     @Query("""
         SELECT p
         FROM EProiect p
